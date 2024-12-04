@@ -1,5 +1,4 @@
 #include <windows.h>
-
 #include <stdint.h>
 
 #define internal static
@@ -26,9 +25,28 @@ struct win32_offscreen_buffer
     int BytesPerPixel;
 };
 
+struct win32_window_dimension
+{
+    int Width;
+    int Height;
+};
+
 // TODO(spike): this is a global for now
 global_variable bool Running;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
+
+win32_window_dimension
+Win32GetWindowDimension(HWND Window)
+{
+    win32_window_dimension Result;
+
+    RECT ClientRect;
+    GetClientRect(Window, &ClientRect);
+    Result.Width = ClientRect.right - ClientRect.left;
+    Result.Height = ClientRect.bottom - ClientRect.top;
+
+	return(Result);
+}
 
 internal void
 RenderWeirdGradient(win32_offscreen_buffer Buffer, int BlueOffset, int GreenOffset)
@@ -65,6 +83,7 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     
 	Buffer->Width = Width;
 	Buffer->Height = Height;
+    Buffer->BytesPerPixel = 4;
 
 	Buffer->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
 	Buffer->Info.bmiHeader.biWidth = Buffer->Width;
@@ -75,22 +94,21 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 
     int BitmapMemorySize = (Buffer->Width*Buffer->Height)*Buffer->BytesPerPixel;
     Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
+    Buffer->Pitch = Width*Buffer->BytesPerPixel;
 
     // TODO(spike): probably clear to black
-
-    int Pitch = Width*Buffer->BytesPerPixel;
 }
 
 internal void
-Win32DisplayBufferInWindow(HDC DeviceContext, RECT ClientRect,
+Win32DisplayBufferInWindow(HDC DeviceContext, 
+        				   int WindowWidth, int WindowHeight,
         				   win32_offscreen_buffer Buffer,
         				   int X, int Y, int Width, int Height)
 {
-    int WindowWidth = ClientRect.right - ClientRect.left;
-    int WindowHeight = ClientRect.bottom - ClientRect.top;
+	// TODO(spike): Aspect ratio correction
 	StretchDIBits(DeviceContext,
-				  0, 0, Buffer.Width, Buffer.Height,
                   0, 0, WindowWidth, WindowHeight,
+				  0, 0, Buffer.Width, Buffer.Height,
                   Buffer.Memory,
                   &Buffer.Info,
    		 	      DIB_RGB_COLORS, SRCCOPY);
@@ -105,11 +123,6 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
     {
 		case WM_SIZE: 
         {
-            RECT ClientRect;
-            GetClientRect(Window, &ClientRect);
-            int Width = ClientRect.right - ClientRect.left;
-            int Height = ClientRect.bottom - ClientRect.top;
-            Win32ResizeDIBSection(&GlobalBackbuffer, Width, Height);
         } break;
  		
 		case WM_CLOSE:
@@ -138,10 +151,8 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
             int Width = Paint.rcPaint.right - Paint.rcPaint.left;
             int Height = Paint.rcPaint.bottom - Paint.rcPaint.top;
 
-            RECT ClientRect;
-            GetClientRect(Window, &ClientRect);
-
-            Win32DisplayBufferInWindow(DeviceContext, ClientRect,
+            win32_window_dimension Dimension = Win32GetWindowDimension(Window);
+            Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height,
                     				   GlobalBackbuffer, X, Y, Width, Height);
             EndPaint(Window, &Paint);
         } break;
@@ -163,6 +174,8 @@ WinMain(HINSTANCE Instance,
         int ShowCode)
 {
     WNDCLASS WindowClass = {};
+
+    Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
 
 	WindowClass.style = CS_HREDRAW|CS_VREDRAW;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
@@ -197,37 +210,27 @@ WinMain(HINSTANCE Instance,
                 MSG Message;
 
 				while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
+                {
+                    if(Message.message == WM_QUIT)
                     {
-                        if(Message.message == WM_QUIT)
-                        {
-                            Running = false;
-                        }
-
-                		TranslateMessage(&Message);
-                		DispatchMessageA(&Message);
+                        Running = false;
                     }
 
-                BOOL MessageResult = GetMessage(&Message, 0, 0, 0);
-
-                if(MessageResult > 0)
-                {
-					TranslateMessage(&Message);
-                    DispatchMessage(&Message);
-            	}
+                    TranslateMessage(&Message);
+                    DispatchMessageA(&Message);
+                }
 
                 RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
 
                 HDC DeviceContext = GetDC(Window);
-                RECT ClientRect;
-                GetClientRect(Window, &ClientRect);
-                int WindowWidth = ClientRect.right - ClientRect.left;
-                int WindowHeight = ClientRect.bottom - ClientRect.top;
-                Win32DisplayBufferInWindow(DeviceContext, ClientRect, 
-                        				   GlobalBackbuffer, 0, 0, WindowWidth, WindowHeight);
+
+                win32_window_dimension Dimension = Win32GetWindowDimension(Window);
+                Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, 
+                        				   GlobalBackbuffer, 0, 0, Dimension.Width, Dimension.Height);
                 ReleaseDC(Window, DeviceContext);
 
                 ++XOffset;
-                ++YOffset;
+                YOffset += 2;
             }
         }
         else
