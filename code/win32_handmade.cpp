@@ -35,14 +35,39 @@ struct win32_window_dimension
 global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
 
-typedef DWORD WINAPI x_input_get_state(DWORD dwUserIndex, XINPUT_STATE  *pState);
-typedef DWORD WINAPI x_input_set_state(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
-global_variable x_input_get_state *XInputGetState_;
-global_variable x_input_set_state *XInputSetState_;
+// XInputGetState
+#define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
+typedef X_INPUT_GET_STATE(x_input_get_state);
+X_INPUT_GET_STATE(XInputGetStateStub)
+{
+    return(0);
+}
+global_variable x_input_get_state *XInputGetState_ = XInputGetStateStub;
+
+// XInputSetState
+#define X_INPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
+typedef X_INPUT_SET_STATE(x_input_set_state);
+X_INPUT_SET_STATE(XInputSetStateStub)
+{
+    return(0);
+}
+global_variable x_input_set_state *XInputSetState_ = XInputSetStateStub;
+
 #define XInputGetState XInputGetState_
 #define XInputSetState XInputSetState_
 
-win32_window_dimension
+internal void
+Win32LoadXInput(void)
+{
+    HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
+    if(XInputLibrary)
+    {
+        XInputGetState = (x_input_get_state *)GetProcAddress(XInputLibrary, "XInputGetState");
+        XInputSetState = (x_input_set_state *)GetProcAddress(XInputLibrary, "XInputSetState");
+    }
+}
+
+internal win32_window_dimension
 Win32GetWindowDimension(HWND Window)
 {
     win32_window_dimension Result;
@@ -123,16 +148,6 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 
 	switch(Message)
     {
-		case WM_SIZE: 
-        {
-        } break;
- 		
-		case WM_CLOSE:
-        {
-            // TODO(spike): Handle this with a message to the user?
-    		GlobalRunning = false;
-        } break;
-
 		case WM_ACTIVATEAPP:
         {
 			OutputDebugStringA("WM_ACTIVATEAPP\n");
@@ -143,6 +158,72 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
             // TODO(spike): Handle this as an error - recreate window? 
             GlobalRunning = false;
         } break;
+
+		case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        {
+			uint32 VKCode = WParam;
+    		bool WasDown = ((LParam & (1 << 30)) != 0);
+            bool IsDown = ((LParam & (1 << 31)) == 0);
+			if(WasDown != IsDown)
+            {
+                if(VKCode == 'W')
+                {
+                }
+                else if(VKCode == 'A')
+                {
+                }
+                else if(VKCode == 'S')
+                {
+                }
+                else if(VKCode == 'D')
+                {
+                }
+                else if(VKCode == 'Q')
+                {
+                }
+                else if(VKCode == 'E')
+                {
+                }
+                else if(VKCode == VK_UP)
+                {
+                }
+                else if(VKCode == VK_LEFT)
+                {
+                }
+                else if(VKCode == VK_DOWN)
+                {
+                }
+                else if(VKCode == VK_RIGHT)
+                {
+                }
+                else if(VKCode == VK_ESCAPE)
+                {
+                    OutputDebugStringA("ESCAPE: ");
+                    if(IsDown)
+                    {
+                        OutputDebugStringA("IsDown ");
+                    }
+                    if(WasDown)
+                    {
+                        OutputDebugStringA("WasDown");
+                    }
+                    OutputDebugStringA("\n");
+                }
+                else if(VKCode == VK_SPACE)
+                {
+                }
+            }
+        } break;
+
+		case WM_CLOSE:
+        {
+            // TODO(spike): Handle this with a message to the user?
+    		GlobalRunning = false;
+        } break;
+
 
         case WM_PAINT:
         {
@@ -168,7 +249,9 @@ WinMain(HINSTANCE Instance,
         LPSTR CommandLine,
         int ShowCode)
 {
-    WNDCLASS WindowClass = {};
+	Win32LoadXInput();
+
+    WNDCLASSA WindowClass = {};
 
     Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
 
@@ -244,6 +327,10 @@ WinMain(HINSTANCE Instance,
 
                         int16 StickX = Pad->sThumbLX;
                         int16 StickY = Pad->sThumbLY;
+						if(AButton)
+                        {
+                            YOffset += 2;
+                        }
                     }
                     else
                     {
@@ -251,23 +338,27 @@ WinMain(HINSTANCE Instance,
                     }
                 }
 
+                XINPUT_VIBRATION Vibration;
+                Vibration.wLeftMotorSpeed = 60000;
+                Vibration.wRightMotorSpeed = 60000;
+				XInputSetState(0, &Vibration);
+
                 RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
 
                 win32_window_dimension Dimension = Win32GetWindowDimension(Window);
                 Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
-            ++XOffset;
-            YOffset += 2;
+                ++XOffset;
+            }
+        }
+        else
+        {
+            // TODO(spike): logging
         }
     }
     else
     {
         // TODO(spike): logging
     }
-}
-else
-{
-    // TODO(spike): logging
-}
 
-return(0);
+    return(0);
 }
