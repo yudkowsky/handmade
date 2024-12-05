@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdint.h>
+#include <xinput.h>
 
 #define internal static
 #define local_persist static
@@ -33,6 +34,13 @@ struct win32_window_dimension
 // TODO(spike): this is a global for now
 global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
+
+typedef DWORD WINAPI x_input_get_state(DWORD dwUserIndex, XINPUT_STATE  *pState);
+typedef DWORD WINAPI x_input_set_state(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
+global_variable x_input_get_state *XInputGetState_;
+global_variable x_input_set_state *XInputSetState_;
+#define XInputGetState XInputGetState_
+#define XInputSetState XInputSetState_
 
 win32_window_dimension
 Win32GetWindowDimension(HWND Window)
@@ -98,16 +106,13 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 }
 
 internal void
-Win32DisplayBufferInWindow(HDC DeviceContext, 
-        				   int WindowWidth, int WindowHeight,
-        				   win32_offscreen_buffer Buffer)
+Win32DisplayBufferInWindow(HDC DeviceContext, int WindowWidth, int WindowHeight, win32_offscreen_buffer Buffer)
 {
 	// TODO(spike): Aspect ratio correction
 	StretchDIBits(DeviceContext,
                   0, 0, WindowWidth, WindowHeight,
 				  0, 0, Buffer.Width, Buffer.Height,
-                  Buffer.Memory,
-                  &Buffer.Info,
+                  Buffer.Memory, &Buffer.Info,
    		 	      DIB_RGB_COLORS, SRCCOPY);
 }
 
@@ -144,8 +149,7 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
             PAINTSTRUCT Paint;
             HDC DeviceContext = BeginPaint(Window, &Paint);
             win32_window_dimension Dimension = Win32GetWindowDimension(Window);
-            Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height,
-                    				   GlobalBackbuffer);
+            Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
             EndPaint(Window, &Paint);
         } break;
 
@@ -213,24 +217,57 @@ WinMain(HINSTANCE Instance,
                     DispatchMessageA(&Message);
                 }
 
+                // TODO(spike): should we poll this more frequently?
+                for(DWORD ControllerIndex = 0; 
+                    ControllerIndex < XUSER_MAX_COUNT; 
+                    ++ControllerIndex)
+                {
+                    XINPUT_STATE ControllerState;
+                    if(XInputGetState(ControllerIndex, &ControllerState) == ERROR_SUCCESS)
+                    {
+						// this controller is plugged in
+                        // TODO(spike): see if ControllerState.dwPacketNumber increments too rapidly
+                        XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
+
+                        bool Up = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+                        bool Down = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+                        bool Left = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+                        bool Right = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+                        bool Start = (Pad->wButtons & XINPUT_GAMEPAD_START);
+                        bool Back = (Pad->wButtons & XINPUT_GAMEPAD_BACK);
+                        bool LeftShoulder = (Pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+                        bool RightShoulder = (Pad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+                        bool AButton = (Pad->wButtons & XINPUT_GAMEPAD_A);
+                        bool BButton = (Pad->wButtons & XINPUT_GAMEPAD_B);
+                        bool XButton = (Pad->wButtons & XINPUT_GAMEPAD_X);
+                        bool YButton = (Pad->wButtons & XINPUT_GAMEPAD_Y);
+
+                        int16 StickX = Pad->sThumbLX;
+                        int16 StickY = Pad->sThumbLY;
+                    }
+                    else
+                    {
+                        // this controller is not available
+                    }
+                }
+
                 RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
 
                 win32_window_dimension Dimension = Win32GetWindowDimension(Window);
-                Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, 
-                        				   GlobalBackbuffer);
-                ++XOffset;
-                YOffset += 2;
-            }
-        }
-        else
-        {
-            // TODO(spike): logging
+                Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
+            ++XOffset;
+            YOffset += 2;
         }
     }
     else
     {
         // TODO(spike): logging
     }
+}
+else
+{
+    // TODO(spike): logging
+}
 
-	return(0);
+return(0);
 }
