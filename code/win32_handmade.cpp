@@ -63,7 +63,10 @@ Win32LoadXInput(void)
     if(XInputLibrary)
     {
         XInputGetState = (x_input_get_state *)GetProcAddress(XInputLibrary, "XInputGetState");
+        if(!XInputGetState) {XInputGetState = XInputGetStateStub;}
+
         XInputSetState = (x_input_set_state *)GetProcAddress(XInputLibrary, "XInputSetState");
+        if(!XInputSetState) {XInputSetState = XInputSetStateStub;}
     }
 }
 
@@ -327,10 +330,9 @@ WinMain(HINSTANCE Instance,
 
                         int16 StickX = Pad->sThumbLX;
                         int16 StickY = Pad->sThumbLY;
-						if(AButton)
-                        {
-                            YOffset += 2;
-                        }
+
+                        XOffset += StickX >> 14;
+						YOffset += StickY >> 14;
                     }
                     else
                     {
@@ -338,16 +340,15 @@ WinMain(HINSTANCE Instance,
                     }
                 }
 
-                XINPUT_VIBRATION Vibration;
-                Vibration.wLeftMotorSpeed = 60000;
-                Vibration.wRightMotorSpeed = 60000;
-				XInputSetState(0, &Vibration);
+                // XINPUT_VIBRATION Vibration;
+                // Vibration.wLeftMotorSpeed = 60000;
+                // Vibration.wRightMotorSpeed = 60000;
+				// XInputSetState(0, &Vibration);
 
                 RenderWeirdGradient(&GlobalBackbuffer, XOffset, YOffset);
 
                 win32_window_dimension Dimension = Win32GetWindowDimension(Window);
                 Win32DisplayBufferInWindow(&GlobalBackbuffer, DeviceContext, Dimension.Width, Dimension.Height);
-                ++XOffset;
             }
         }
         else
