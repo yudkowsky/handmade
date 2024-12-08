@@ -224,6 +224,7 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 		case WM_CLOSE:
         {
             // TODO(spike): Handle this with a message to the user?
+
     		GlobalRunning = false;
         } break;
 
