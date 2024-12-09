@@ -130,7 +130,7 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
     Buffer->Pitch = Width*BytesPerPixel;
 
-    // TODO(spike): probably clear to black
+    // TODO(spike): clear to black
 }
 
 internal void
