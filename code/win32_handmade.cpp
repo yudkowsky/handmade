@@ -228,7 +228,6 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
     		GlobalRunning = false;
         } break;
 
-
         case WM_PAINT:
         {
             PAINTSTRUCT Paint;
