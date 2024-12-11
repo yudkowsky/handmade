@@ -16,8 +16,6 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
-typedef int32 bool32 ;
-
 struct win32_offscreen_buffer
 {
     BITMAPINFO Info;
@@ -42,30 +40,26 @@ global_variable win32_offscreen_buffer GlobalBackbuffer;
 typedef X_INPUT_GET_STATE(x_input_get_state);
 X_INPUT_GET_STATE(XInputGetStateStub)
 {
-    return(ERROR_DEVICE_NOT_CONNECTED);
+    return(0);
 }
 global_variable x_input_get_state *XInputGetState_ = XInputGetStateStub;
-#define XInputGetState XInputGetState_
 
 // XInputSetState
 #define X_INPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
 typedef X_INPUT_SET_STATE(x_input_set_state);
 X_INPUT_SET_STATE(XInputSetStateStub)
 {
-    return(ERROR_DEVICE_NOT_CONNECTED);
+    return(0);
 }
 global_variable x_input_set_state *XInputSetState_ = XInputSetStateStub;
+
+#define XInputGetState XInputGetState_
 #define XInputSetState XInputSetState_
 
 internal void
 Win32LoadXInput(void)
 {
-    // TODO(spike): test for other platforms?
-    HMODULE XInputLibrary = LoadLibraryA("xinput1_4.dll");
-	if(!XInputLibrary)
-    {
-		HMODULE XInputLibrary = LoadLibraryA("xinput1_4.dll");
-    }
+    HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
     if(XInputLibrary)
     {
         XInputGetState = (x_input_get_state *)GetProcAddress(XInputLibrary, "XInputGetState");
@@ -129,8 +123,8 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 	Buffer->Info.bmiHeader.biWidth = Buffer->Width;
 	Buffer->Info.bmiHeader.biHeight = -Buffer->Height;
 	Buffer->Info.bmiHeader.biPlanes = 1;
-    Buffer->Info.bmiHeader.biBitCount = 32;
-    Buffer->Info.bmiHeader.biCompression = BI_RGB;
+	Buffer->Info.bmiHeader.biBitCount = 32;
+	Buffer->Info.bmiHeader.biCompression = BI_RGB;
 
     int BitmapMemorySize = (Buffer->Width*Buffer->Height)*BytesPerPixel;
     Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
@@ -164,7 +158,7 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
 
         case WM_DESTROY:
         {
-            // TODO(spike): handle this as an error - recreate window? 
+            // TODO(spike): Handle this as an error - recreate window? 
             GlobalRunning = false;
         } break;
 
@@ -225,11 +219,6 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
                 {
                 }
             }
-            bool32 AltKeyWasDown = (LParam & (1 << 29));
-            if((VKCode == VK_F4) && AltKeyWasDown)
-            {
-                GlobalRunning = false;
-            }
         } break;
 
 		case WM_CLOSE:
@@ -277,19 +266,20 @@ WinMain(HINSTANCE Instance,
 
     if(RegisterClass(&WindowClass))
     {
-        HWND Window = CreateWindowEx(
-            0,
-            WindowClass.lpszClassName,
-            "Handmade Hero",
-            WS_OVERLAPPEDWINDOW|WS_VISIBLE,
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-            0,
-            0,
-            Instance,
-            0);
+        HWND Window =
+            CreateWindowEx(
+                0,
+                WindowClass.lpszClassName,
+                "Handmade Hero",
+                WS_OVERLAPPEDWINDOW|WS_VISIBLE,
+				CW_USEDEFAULT,
+				CW_USEDEFAULT,
+				CW_USEDEFAULT,
+				CW_USEDEFAULT,
+                0,
+                0,
+                Instance,
+                0);
         if(Window)
         {
             HDC DeviceContext = GetDC(Window);
@@ -314,7 +304,6 @@ WinMain(HINSTANCE Instance,
                 }
 
                 // TODO(spike): should we poll this more frequently?
-
                 for(DWORD ControllerIndex = 0; 
                     ControllerIndex < XUSER_MAX_COUNT; 
                     ++ControllerIndex)
@@ -324,7 +313,6 @@ WinMain(HINSTANCE Instance,
                     {
 						// this controller is plugged in
                         // TODO(spike): see if ControllerState.dwPacketNumber increments too rapidly
-
                         XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
 
                         bool Up = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
@@ -343,8 +331,8 @@ WinMain(HINSTANCE Instance,
                         int16 StickX = Pad->sThumbLX;
                         int16 StickY = Pad->sThumbLY;
 
-                        XOffset += StickX >> 14;
-						YOffset += StickY >> 14;
+                        XOffset += StickX >> 12;
+						YOffset += StickY >> 12;
                     }
                     else
                     {
