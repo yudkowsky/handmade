@@ -110,6 +110,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize)
             WaveFormat.nBlockAlign = (WaveFormat.nChannels*WaveFormat.wBitsPerSample) / 8;
             WaveFormat.nAvgBytesPerSec = WaveFormat.nSamplesPerSec*WaveFormat.nBlockAlign;
             WaveFormat.cbSize = 0;
+
 			if(SUCCEEDED(DirectSound->SetCooperativeLevel(Window, DSSCL_PRIORITY)))
             {
                 DSBUFFERDESC BufferDescription = {};
@@ -137,7 +138,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize)
             } 
 			else
             {
-
+                // TODO(spike): diagnostic
             }
 
             // TODO(spike): DSBCAPS_GETCURRENTPOSITION2 for accuracy?
