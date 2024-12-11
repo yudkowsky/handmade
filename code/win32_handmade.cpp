@@ -17,7 +17,7 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
-typedef int32 bool32 ;
+typedef int32 bool32;
 
 struct win32_offscreen_buffer
 {
@@ -397,7 +397,7 @@ WinMain(HINSTANCE Instance,
             // sound test
             int SamplesPerSecond = 48000;
             int ToneHz = 256;
-            int ToneVolume = 1000;
+            int ToneVolume = 500;
             uint32 RunningSampleIndex = 0;
 			int SquareWavePeriod = SamplesPerSecond/ToneHz;
             int HalfSquareWavePeriod = SquareWavePeriod/2;
@@ -405,8 +405,7 @@ WinMain(HINSTANCE Instance,
             int SecondaryBufferSize = SamplesPerSecond*BytesPerSample;
 
             Win32InitDSound(Window, SamplesPerSecond, SecondaryBufferSize);
-		
-            GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            bool32 SoundIsPlaying = false;
 
             GlobalRunning = true;
             while(GlobalRunning)
@@ -477,7 +476,11 @@ WinMain(HINSTANCE Instance,
                 {
                     DWORD ByteToLock = (RunningSampleIndex*BytesPerSample) % SecondaryBufferSize;
                     DWORD BytesToWrite;
-                    if(ByteToLock > PlayCursor)
+                    if(ByteToLock == PlayCursor)
+                    {
+						BytesToWrite = SecondaryBufferSize;
+                    }
+                    else if(ByteToLock > PlayCursor)
                     {
 						BytesToWrite = (SecondaryBufferSize - ByteToLock);
                         BytesToWrite += PlayCursor;
@@ -487,6 +490,8 @@ WinMain(HINSTANCE Instance,
                         BytesToWrite = PlayCursor - ByteToLock;
                     }
 
+                    // TODO(spike): more strenuous testing required here
+                    // TODO(spike): switch to sine wave
                     VOID *Region1;
                     DWORD Region1Size;
                     VOID *Region2;
@@ -497,6 +502,8 @@ WinMain(HINSTANCE Instance,
                                                              0)))
                     {
                         // TODO(spike): assert that Region1Size/Region2Size are valid
+
+                        // TODO(spike): collapse loops
                         DWORD Region1SampleCount = Region1Size/BytesPerSample;
                         int16 *SampleOut = (int16 *)Region1;
                         for(DWORD SampleIndex = 0;
@@ -518,7 +525,14 @@ WinMain(HINSTANCE Instance,
                             *SampleOut++ = SampleValue;
                             *SampleOut++ = SampleValue;
                         }
+
+                        GlobalSecondaryBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
                     }
+                }
+                if(!SoundIsPlaying)
+                {
+                    GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
+                    SoundIsPlaying = true;
                 }
 
                 win32_window_dimension Dimension = Win32GetWindowDimension(Window);
