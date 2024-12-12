@@ -19,14 +19,7 @@
     Just a partial list!
 */
 
-#include <windows.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <xinput.h>
-#include <dsound.h>
-
-// TODO(spike): implement sine ourselves
-#include <math.h>
 
 #define internal static
 #define local_persist static
@@ -50,6 +43,14 @@ typedef float real32;
 typedef double real64;
 
 #include "handmade.cpp"
+
+#include <windows.h>
+#include <stdio.h>
+#include <xinput.h>
+#include <dsound.h>
+
+// TODO(spike): implement sine ourselves
+#include <math.h>
 
 struct win32_offscreen_buffer
 {
