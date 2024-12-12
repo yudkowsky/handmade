@@ -44,8 +44,10 @@ typedef int32 bool32;
 typedef float real32;
 typedef double real64;
 
+#include "handmade.h"
 #include "handmade.cpp"
 
+#include <malloc.h>
 #include <windows.h>
 #include <stdio.h>
 #include <xinput.h>
@@ -249,7 +251,7 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     Buffer->Info.bmiHeader.biCompression = BI_RGB;
 
     int BitmapMemorySize = (Buffer->Width*Buffer->Height)*BytesPerPixel;
-    Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);
+    Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
     Buffer->Pitch = Width*BytesPerPixel;
 
     // TODO(spike): clear to black
@@ -525,6 +527,8 @@ WinMain(HINSTANCE Instance,
 
             GlobalRunning = true;
 
+            int16 *Samples = (int16 *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+
             LARGE_INTEGER LastCounter;
             QueryPerformanceCounter(&LastCounter);
             uint64 LastCycleCount = __rdtsc();
@@ -591,12 +595,14 @@ WinMain(HINSTANCE Instance,
                 DWORD PlayCursor; 
                 DWORD WriteCursor;
                 bool32 SoundIsValid = false;
+                // TODO(spike): tighten up sound logic so that we know where we should be writing to, and can anticipate
+                // the time spent in the game update
                 if(SUCCEEDED(GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor)))
                 {
                     ByteToLock = (SoundOutput.RunningSampleIndex*SoundOutput.BytesPerSample) %
-                        				SoundOutput.SecondaryBufferSize;
+                        		 SoundOutput.SecondaryBufferSize;
                     TargetCursor = ((PlayCursor + (SoundOutput.LatencySampleCount*SoundOutput.BytesPerSample)) %
-                        				  SoundOutput.SecondaryBufferSize);
+                        		   SoundOutput.SecondaryBufferSize);
                     if(ByteToLock > TargetCursor)
                     {
 						BytesToWrite = (SoundOutput.SecondaryBufferSize - ByteToLock);
@@ -610,7 +616,6 @@ WinMain(HINSTANCE Instance,
                     SoundIsValid = true;
                 }
 
-                int16 Samples[48000*2];
                 game_sound_output_buffer SoundBuffer = {};
                 SoundBuffer.SamplesPerSecond = SoundOutput.SamplesPerSecond;
                 SoundBuffer.SampleCount = BytesToWrite / SoundOutput.BytesPerSample;
