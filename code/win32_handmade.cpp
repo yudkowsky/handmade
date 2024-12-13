@@ -559,6 +559,7 @@ WinMain(HINSTANCE Instance,
 
                         // TODO(spike): we will do deadzone handling properly later
                         // TODO(spike): min/max macros needed
+                        // TODO(spike): collapse to single function
 						real32 X; 
                         if(Pad->sThumbLX < 0)
                         {
