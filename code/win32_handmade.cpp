@@ -218,6 +218,17 @@ Win32GetWindowDimension(HWND Window)
 }
 
 internal void
+Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer, HDC DeviceContext, int WindowWidth, int WindowHeight)
+{
+	// TODO(spike): Aspect ratio correction
+	StretchDIBits(DeviceContext,
+                  0, 0, WindowWidth, WindowHeight,
+				  0, 0, Buffer->Width, Buffer->Height,
+                  Buffer->Memory, &Buffer->Info,
+   		 	      DIB_RGB_COLORS, SRCCOPY);
+}
+
+internal void
 Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
     if(Buffer->Memory)
@@ -242,17 +253,6 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     Buffer->Pitch = Width*BytesPerPixel;
 
     // TODO(spike): clear to black
-}
-
-internal void
-Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer, HDC DeviceContext, int WindowWidth, int WindowHeight)
-{
-	// TODO(spike): Aspect ratio correction
-	StretchDIBits(DeviceContext,
-                  0, 0, WindowWidth, WindowHeight,
-				  0, 0, Buffer->Width, Buffer->Height,
-                  Buffer->Memory, &Buffer->Info,
-   		 	      DIB_RGB_COLORS, SRCCOPY);
 }
 
 LRESULT CALLBACK
