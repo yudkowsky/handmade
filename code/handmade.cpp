@@ -51,8 +51,9 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
     if(!Memory->IsInitialised)
     {
         GameState->ToneHz = 256;
-        GameState->GreenOffset = 0;
-        GameState->BlueOffset = 0;
+
+        // TODO(spike): this may be more appropriate for the platform layer to do
+        Memory->IsInitialised = true;
     }
 
     game_controller_input *Input0 = &Input->Controllers[0];

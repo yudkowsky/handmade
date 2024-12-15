@@ -77,7 +77,7 @@ struct game_memory
 {
     bool32 IsInitialised;
 	uint64 PermanentStorageSize;
-    void *PermanentStorage;
+    void *PermanentStorage; // required to be cleared to zero at startup
 };
 
 internal void
