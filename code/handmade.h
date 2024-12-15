@@ -1,5 +1,8 @@
 #if !defined(HANDMADE_H)
 
+#define Kilobytes(Value) ((Value)*1024)
+#define Megabytes(Value) (Kilobytes(Value)*1024)
+#define Gigabytes(Value) (Megabytes(Value)*1024)
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 // TODO(spike): swap, min, max ... macros?
 
@@ -70,8 +73,26 @@ struct game_input
     game_controller_input Controllers[4];
 };
 
+struct game_memory
+{
+    bool32 IsInitialised;
+	uint64 PermanentStorageSize;
+    void *PermanentStorage;
+};
+
 internal void
-GameUpdateAndRender(game_input *Input, game_offscreen_buffer *Buffer, game_sound_output_buffer *SoundBuffer);
+GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer, game_sound_output_buffer *SoundBuffer);
+
+//
+//
+//
+
+struct game_state
+{
+    int ToneHz;
+    int GreenOffset;
+    int BlueOffset;
+};
 
 #define HANDMADE_H
 #endif

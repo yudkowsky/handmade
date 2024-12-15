@@ -218,17 +218,6 @@ Win32GetWindowDimension(HWND Window)
 }
 
 internal void
-Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer, HDC DeviceContext, int WindowWidth, int WindowHeight)
-{
-	// TODO(spike): Aspect ratio correction
-	StretchDIBits(DeviceContext,
-                  0, 0, WindowWidth, WindowHeight,
-				  0, 0, Buffer->Width, Buffer->Height,
-                  Buffer->Memory, &Buffer->Info,
-   		 	      DIB_RGB_COLORS, SRCCOPY);
-}
-
-internal void
 Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
     if(Buffer->Memory)
@@ -253,6 +242,17 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     Buffer->Pitch = Width*BytesPerPixel;
 
     // TODO(spike): clear to black
+}
+
+internal void
+Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer, HDC DeviceContext, int WindowWidth, int WindowHeight)
+{
+	// TODO(spike): Aspect ratio correction
+	StretchDIBits(DeviceContext,
+                  0, 0, WindowWidth, WindowHeight,
+				  0, 0, Buffer->Width, Buffer->Height,
+                  Buffer->Memory, &Buffer->Info,
+   		 	      DIB_RGB_COLORS, SRCCOPY);
 }
 
 LRESULT CALLBACK
@@ -503,6 +503,10 @@ WinMain(HINSTANCE Instance,
 
             int16 *Samples = (int16 *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 
+            game_memory GameMemory = {};
+            GameMemory.PermanentStorageSize = Megabytes(64);
+            GameMemory.PermanentStorage = VirtualAlloc(0, GameMemory.PermanentStorageSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+
             game_input Input[2] = {};
             game_input *NewInput = &Input[0];
             game_input *OldInput = &Input[1];
@@ -642,7 +646,7 @@ WinMain(HINSTANCE Instance,
                 Buffer.Width = GlobalBackbuffer.Width;
      			Buffer.Height = GlobalBackbuffer.Height;
                 Buffer.Pitch = GlobalBackbuffer.Pitch;
-                GameUpdateAndRender(NewInput, &Buffer, &SoundBuffer);
+                GameUpdateAndRender(&GameMemory, NewInput, &Buffer, &SoundBuffer);
 
                 // DirectSound output test
                 if(SoundIsValid)
