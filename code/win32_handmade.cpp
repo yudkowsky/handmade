@@ -507,7 +507,7 @@ WinMain(HINSTANCE Instance,
             GameMemory.PermanentStorageSize = Megabytes(64);
             GameMemory.PermanentStorage = VirtualAlloc(0, GameMemory.PermanentStorageSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 
-            GameMemory.TransientStorage = Gigabytes(2); // allocating 4 gigs creates overflow; we don't have full 64bit address space here
+            GameMemory.TransientStorage = Gigabytes(2); // allocating 4 gigs creates overflow; don't have full 64bit address space here
             GameMemory.TransientStorage = VirtualAlloc(0, GameMemory.TransientStorageSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 
             if(Samples && GameMemory.PermanentStorage)
