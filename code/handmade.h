@@ -16,14 +16,6 @@
 */
 
 // TODO(spike): in the future, rendering _specifically_ will become a three-tiered abstraction
-struct game_offscreen_buffer
-{
-    void *Memory;
-    int Width;
-    int Height;
-	int Pitch;
-};
-
 struct game_sound_output_buffer 
 {
     int SamplesPerSecond;
@@ -35,6 +27,14 @@ struct game_button_state
 {
 	int HalfTransitionCount;
 	bool32 EndedDown;
+};
+
+struct game_offscreen_buffer
+{
+    void *Memory;
+    int Width;
+    int Height;
+	int Pitch;
 };
 
 struct game_controller_input
