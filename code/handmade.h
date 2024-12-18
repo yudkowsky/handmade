@@ -4,6 +4,7 @@
 #define Megabytes(Value) (Kilobytes(Value)*1024)
 #define Gigabytes(Value) (Megabytes(Value)*1024)
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
+
 // TODO(spike): swap, min, max ... macros?
 
 /*
@@ -23,18 +24,18 @@ struct game_sound_output_buffer
     int16 *Samples;
 };
 
-struct game_button_state
-{
-	int HalfTransitionCount;
-	bool32 EndedDown;
-};
-
 struct game_offscreen_buffer
 {
     void *Memory;
     int Width;
     int Height;
 	int Pitch;
+};
+
+struct game_button_state
+{
+	int HalfTransitionCount;
+	bool32 EndedDown;
 };
 
 struct game_controller_input
