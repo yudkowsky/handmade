@@ -77,8 +77,12 @@ struct game_input
 struct game_memory
 {
     bool32 IsInitialised;
+
 	uint64 PermanentStorageSize;
     void *PermanentStorage; // required to be cleared to zero at startup
+
+	uint64 TransientStorageSize;
+    void *TransientStorage; // required to be cleared to zero at startup
 };
 
 internal void
