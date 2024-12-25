@@ -1,5 +1,8 @@
 #if !defined(HANDMADE_H)
 
+#define Assert(Expression) \
+    if (!(Expression)) {*(int *)0 = 0;}
+
 #define Kilobytes(Value) ((Value)*1024)
 #define Megabytes(Value) (Kilobytes(Value)*1024)
 #define Gigabytes(Value) (Megabytes(Value)*1024)
