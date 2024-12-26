@@ -1,3 +1,4 @@
+#if !defined(HANDMADE_H)
 /*
 HANDMADE_INTERNAL:
 	0 - Build for release
@@ -8,8 +9,6 @@ HANDMADE_SLOW:
     1 - Slow code welcome
 */ 
 
-#if !defined(HANDMADE_H)
-
 #if HANDMADE_SLOW 
 // TODO(spike): complete assertion macro
 #define Assert(Expression) if (!(Expression)) {*(int *)0 = 0;}
@@ -19,16 +18,29 @@ HANDMADE_SLOW:
 
 #define Kilobytes(Value) ((Value)*1024LL)
 #define Megabytes(Value) (Kilobytes(Value)*1024LL)
-#define Gigabytes(Value) (Megabytes(Value)*1024Ll)
+#define Gigabytes(Value) (Megabytes(Value)*1024LL)
 #define Terabytes(Value) (Gigabytes(Value)*1024LL)
 
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
-
 // TODO(spike): swap, min, max ... macros?
 
+inline uint32
+SafeTruncateUInt64(uint64 Value)
+{
+    // TODO(spike): defines for maximum values 
+    Assert(Value <= 0xFFFFFFFF);
+    uint32 Result = (uint32)Value;
+	return Result;
+}
+
 /*
-	TODO(spike): services that the game provides to the platform layer 
+	services that the game provides to the platform layer 
 */
+#if HANDMADE_INTERNAL
+internal void *DEBUGPlatformReadEntireFile(char *Filename);
+internal void DEBUGPlatformFreeFileMemory(void *Memory);
+internal bool32 DEBUGPlatformWriteEntireFile(char *Filename, uint32 MemorySize, void *Memory);
+#endif
 
 /*
 	services that the platform layer provides to the game.

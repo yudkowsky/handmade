@@ -83,12 +83,53 @@ global_variable x_input_set_state *XInputSetState_ = XInputSetStateStub;
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
-void *
-PlatformLoadFile(char *FileName)
+internal void *
+DEBUGPlatformReadEntireFile(char *Filename)
 {
-    // implements the win32 file loading
-	return(0);
+	void *Result = 0;
+
+	HANDLE FileHandle = CreateFile(Filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if(FileHandle != INVALID_HANDLE_VALUE)
+    {
+        LARGE_INTEGER FileSize;
+		if(GetFileSizeEx(FileHandle, &FileSize))
+        {
+            uint32 FileSize32 = SafeTruncateUInt64(FileSize.QuadPart);
+            Result = VirtualAlloc(0, FileSize32, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+            if(Result)
+            {
+				if(ReadFile(FileHandle, Result, FileSize.QuadPart, &BytesRead, 0))
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+        }
+
+        CloseHandle(FileHandle);
+    }
+
+    return(Result);
 }
+
+internal void
+DEBUGPlatformFreeFileMemory(void *Memory)
+{
+	if(Memory)
+    {
+		VirtualFree(Memory, 0, MEM_RELEASE);
+    }
+}
+
+internal bool32
+DEBUGPlatformWriteEntireFile(char *Filename, uint32 MemorySize, void *Memory)
+{
+
+}
+
 
 internal void
 Win32LoadXInput(void)

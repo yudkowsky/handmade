@@ -52,6 +52,14 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
 	game_state *GameState = (game_state *)Memory->PermanentStorage;
     if(!Memory->IsInitialised)
     {
+		char *Filename = "test.bmp";
+
+		void *BitmapMemory = DEBUGPlatformReadEntireFile(Filename);
+        if(BitmapMemory)
+        {
+            DEBUGPlatformFreeFileMemory(BitmapMemory);
+        }
+
         GameState->ToneHz = 256;
 
         // TODO(spike): this may be more appropriate for the platform layer to do
