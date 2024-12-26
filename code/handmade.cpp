@@ -52,7 +52,7 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
 	game_state *GameState = (game_state *)Memory->PermanentStorage;
     if(!Memory->IsInitialised)
     {
-		char *Filename = "test.bmp";
+		char *Filename = __FILE__; 
 
 		void *BitmapMemory = DEBUGPlatformReadEntireFile(Filename);
         if(BitmapMemory)

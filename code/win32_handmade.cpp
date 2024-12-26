@@ -98,18 +98,33 @@ DEBUGPlatformReadEntireFile(char *Filename)
             Result = VirtualAlloc(0, FileSize32, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
             if(Result)
             {
-				if(ReadFile(FileHandle, Result, FileSize.QuadPart, &BytesRead, 0))
+                DWORD BytesRead;
+				if(ReadFile(FileHandle, Result, FileSize32, &BytesRead, 0) && FileSize32 == BytesRead)
                 {
-
+                    // file read successfully
                 }
                 else
                 {
-
+                    // TODO(spike): logging
+                    DEBUGPlatformFreeFileMemory(Result);
+                    Result = 0;
                 }
             }
+            else
+            {
+                // TODO(spike): logging
+            }
+        }
+        else
+        {
+            // TODO(spike): logging
         }
 
         CloseHandle(FileHandle);
+    } 
+    else
+    {
+        // TODO(spike): logging
     }
 
     return(Result);
@@ -127,9 +142,28 @@ DEBUGPlatformFreeFileMemory(void *Memory)
 internal bool32
 DEBUGPlatformWriteEntireFile(char *Filename, uint32 MemorySize, void *Memory)
 {
+	bool32 Result = false;
+	
+    HANDLE FileHandle = CreateFileA(Filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if(FileHandle != INVALID_HANDLE_VALUE)
+    {
+		DWORD BytesWritten;
+        if(WriteFile(FileHandle, Memory, MemorySize, &BytesWritten, 0))
+        {
+            Result = (BytesWritten == MemorySize);
+        }
+        else
+        {
+            // TODO(spike): logging
+        }
 
+        CloseHandle(FileHandle);
+    }
+    else
+    {
+		// TODO(spike): logging
+    }
 }
-
 
 internal void
 Win32LoadXInput(void)
