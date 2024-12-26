@@ -37,7 +37,12 @@ SafeTruncateUInt64(uint64 Value)
 	services that the game provides to the platform layer 
 */
 #if HANDMADE_INTERNAL
-internal void *DEBUGPlatformReadEntireFile(char *Filename);
+struct debug_read_file_result
+{
+    uint32 ContentsSize;
+	void *Contents;
+};
+internal debug_read_file_result DEBUGPlatformReadEntireFile(char *Filename);
 internal void DEBUGPlatformFreeFileMemory(void *Memory);
 internal bool32 DEBUGPlatformWriteEntireFile(char *Filename, uint32 MemorySize, void *Memory);
 #endif
