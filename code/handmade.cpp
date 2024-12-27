@@ -57,7 +57,7 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
 		debug_read_file_result File = DEBUGPlatformReadEntireFile(Filename);
         if(File.Contents)
         {
-            DEBUGPlatformWriteEntireFile("w:/handmade/data/test.out", File.ContentsSize, File.Contents);
+            DEBUGPlatformWriteEntireFile("test.out", File.ContentsSize, File.Contents);
             DEBUGPlatformFreeFileMemory(File.Contents);
         }
 

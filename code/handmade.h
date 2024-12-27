@@ -37,6 +37,10 @@ SafeTruncateUInt64(uint64 Value)
 	services that the game provides to the platform layer 
 */
 #if HANDMADE_INTERNAL
+/*
+    important: these are not for doing anything in the shipping game -
+    they are blocking and the write doesn't protect against lost data!
+*/
 struct debug_read_file_result
 {
     uint32 ContentsSize;
