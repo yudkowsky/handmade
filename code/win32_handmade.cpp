@@ -791,4 +791,3 @@ WinMain(HINSTANCE Instance,
 
     return(0);
 }
-
