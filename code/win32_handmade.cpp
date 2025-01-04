@@ -176,12 +176,12 @@ Win32LoadXInput(void)
 	if(!XInputLibrary)
     {
         // TODO(spike): diagnostic
-		HMODULE XInputLibrary = LoadLibraryA("xinput9_1_0.dll");
+		XInputLibrary = LoadLibraryA("xinput9_1_0.dll");
     }
 	if(!XInputLibrary)
     {
         // TODO(spike): diagnostic
-		HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
+		XInputLibrary = LoadLibraryA("xinput1_3.dll");
     }
     if(XInputLibrary)
     {
@@ -356,7 +356,7 @@ Win32MainWindowCallback(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
         case WM_KEYDOWN:
         case WM_KEYUP:
         {
-			uint32 VKCode = WParam;
+			uint32 VKCode = (uint32)WParam;
     		bool32 WasDown = ((LParam & (1 << 30)) != 0);
             bool32 IsDown = ((LParam & (1 << 31)) == 0);
 			if(WasDown != IsDown)
@@ -620,7 +620,7 @@ WinMain(HINSTANCE Instance,
                     }
 
                     // TODO(spike): should we poll this more frequently?
-                    int MaxControllerCount = XUSER_MAX_COUNT;
+                    DWORD MaxControllerCount = XUSER_MAX_COUNT;
                     if(MaxControllerCount > ArrayCount(NewInput->Controllers))
                     {
                         MaxControllerCount = ArrayCount(NewInput->Controllers);
